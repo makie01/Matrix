@@ -46,11 +46,15 @@ public class Matrix {
 		
 		return elements[(row-1)*getColumns() + column -1];
 	}
-	
+	/**
+	 *@post | result.length == getRows()*getColumns()
+	 *@creates | result
+	 */
 	public double[] getMatrixRowMajor() {
 		return elements.clone();
 	}
 	/**
+	 * @creates| result
 	 * @post | result.length == getRows()*getColumns()
 	 */
 	
@@ -64,6 +68,7 @@ public class Matrix {
 		return result;
 	}
 	/**
+	 * @creates | result
 	 * @post | result.length == getRows()
 	 */
 	public double[][] getMatrix(){
@@ -93,7 +98,7 @@ public class Matrix {
 	}
 	/**
 	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
-	 * 		| getMatrixRowMajor()[i] == scalor * old(getMatrixRowMajor())[i])
+	 * 		| result.getMatrixRowMajor()[i] == scalor * getMatrixRowMajor()[i])
 	 */
 	
 	public Matrix scaled(double scalor) {
@@ -107,7 +112,7 @@ public class Matrix {
 	/**
 	 * @throws | getRows() != matrix2.getRows() || getColumns() != matrix2.getColumns()
 	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
-	 * 		| getMatrixRowMajor()[i] == old(getMatrixRowMajor())[i] + matrix2.getMatrixRowMajor()[i])
+	 * 		| result.getMatrixRowMajor()[i] == getMatrixRowMajor()[i] + matrix2.getMatrixRowMajor()[i])
 	 */
 	
 	public Matrix plus(Matrix matrix2) {

@@ -26,6 +26,16 @@ class MatrixTest {
 		assertEquals(3, mymatrix.getColumns());
 		assertEquals(3, mymatrix.getRows());
 		
+		Matrix scaledmatrix = mymatrix.scaled(2);
+		assertArrayEquals(new double[] {2,4,8,6,8,4,18,0,2}, scaledmatrix.getMatrixRowMajor());		
+		Matrix mymatrix2 = new Matrix(new double[] {1,1,1,1,1,1,1,1,1},3,3);
+		
+		Matrix summatrix = mymatrix.plus(mymatrix2);
+		assertArrayEquals(new double[] {2,3,5,4,5,3,10,1,2}, summatrix.getMatrixRowMajor());
+		
+
+		
+		
 		
 	}
 
