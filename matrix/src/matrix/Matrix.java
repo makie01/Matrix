@@ -1,6 +1,8 @@
 package matrix;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
+
 /**
  * 
  * @invar | getRows() > 0
@@ -88,6 +90,38 @@ public class Matrix {
 		this.rows = rows;
 		this.columns = columns;
 		this.elements = elements.clone();
+	}
+	/**
+	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
+	 * 		| getMatrixRowMajor()[i] == scalor * old(getMatrixRowMajor())[i])
+	 */
+	
+	public Matrix scaled(double scalor) {
+		double[] newElements = new double[elements.length];
+		for(int i=0; i< elements.length;i++) {
+			newElements[i] = elements[i]*scalor;
+		}
+		return new Matrix(newElements, rows, columns);
+	}
+	
+	/**
+	 * @throws | getRows() != matrix2.getRows() || getColumns() != matrix2.getColumns()
+	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
+	 * 		| getMatrixRowMajor()[i] == old(getMatrixRowMajor())[i] + matrix2.getMatrixRowMajor()[i])
+	 */
+	
+	public Matrix plus(Matrix matrix2) {
+		if (rows != matrix2.getRows() || columns != matrix2.getColumns())
+			throw new IllegalArgumentException("Dimensions of matrices don't match.");
+		
+		
+		double[] newElements = new double[elements.length];
+		for(int i=0; i< elements.length;i++) {
+			newElements[i] = elements[i] + matrix2.getMatrixRowMajor()[i];
+		}
+		
+		return new Matrix(newElements, rows, columns);
+		
 	}
 	
 }
