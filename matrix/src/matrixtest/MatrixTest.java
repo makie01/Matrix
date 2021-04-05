@@ -20,8 +20,6 @@ class MatrixTest {
 		double[][] matrixArray = mymatrix.getMatrix();
 		assertArrayEquals(new double[][] {{1,2,4},{3,4,2},{9,0,1}},matrixArray);
 		
-		rowmajor[3] = 7;
-		assertEquals(3,mymatrix.getElementAt(2, 1));
 		
 		assertEquals(3, mymatrix.getColumns());
 		assertEquals(3, mymatrix.getRows());
@@ -33,7 +31,7 @@ class MatrixTest {
 		Matrix summatrix = mymatrix.plus(mymatrix2);
 		assertArrayEquals(new double[] {2,3,5,4,5,3,10,1,2}, summatrix.getMatrixRowMajor());
 		
-
+		mymatrix.scale(0.5);
 		
 		
 		

@@ -4,6 +4,10 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * Each instance of this class stores a matrix.
+ * opmerking:
+ * deel van documentatie staat hier niet in, zie branch immutable-columnmajor
+ * EXTRA NOTITIES ZIE BRANCHE IMMUTABLE-COLUMNMAJOR
  * 
  * @invar | getRows() > 0
  * @invar | getColumns() > 0
@@ -21,30 +25,39 @@ public class Matrix {
 	
 	/**
 	 * @representationObject
+	 * @invar | elements != null
 	 * @invar | elements.length == rows*columns
 	 */
 	private double[] elements;
 
-	
+	/**
+	 * @basic
+	 * @immutable
+	 * Door hier immutable te zetten moeten we nadien in de methodes niet meer
+	 * zeggen dat de waarde van deze inspector niet wijzigt.
+	 */
 	
 	public int getRows() {
 		return rows;
 	}
-	
+	/**
+	 * @immutable
+	 * @basic
+	 */
 	public int getColumns() {
 		return columns;
 	}
 	
 	/**
 	 * @throws | row <= 0 || row > getRows() || column <=0 || column > getColumns()
-	 * @post | result == getMatrixRowMajor()[(row-1)*getColumns() + column -1]
+	 * @post | result == getMatrixRowMajor()[row*getColumns() + column]
 	 */
 	
 	public double getElementAt(int row, int column) {
 		if(row <= 0 || row > getRows() || column <=0 || column > getColumns())
 			throw new IllegalArgumentException("Unvalid row or column");
 		
-		return elements[(row-1)*getColumns() + column -1];
+		return elements[row*getColumns() + column];
 	}
 	/**
 	 *@post | result.length == getRows()*getColumns()
@@ -68,8 +81,8 @@ public class Matrix {
 		return result;
 	}
 	/**
+	 * @basic
 	 * @creates | result
-	 * @post | result.length == getRows()
 	 */
 	public double[][] getMatrix(){
 		double[][] result = new double[getRows()][getColumns()];
@@ -83,6 +96,9 @@ public class Matrix {
 	}
 	/**
 	 * The elements of the matrix are given in row major order.
+	 * @inspects| elements
+	 * 
+	 * 
 	 * @throws | elements.length != rows*columns
 	 * @post | Arrays.equals(elements, getMatrixRowMajor())
 	 */
@@ -97,6 +113,11 @@ public class Matrix {
 		this.elements = elements.clone();
 	}
 	/**
+	 * Returns a scaled copy
+	 * 
+	 * @inspects | this
+	 * @creates | result
+	 * 
 	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
 	 * 		| result.getMatrixRowMajor()[i] == scalor * getMatrixRowMajor()[i])
 	 */
@@ -108,8 +129,20 @@ public class Matrix {
 		}
 		return new Matrix(newElements, rows, columns);
 	}
+	/**
+	 * Scales the elements of the given matrix (no copy)
+	 * @mutates | this
+	 * @post | IntStream.range(0, getRows()*getColumns()).allMatch(i-> getMatrixRowMajor()[i]
+	 * 		 |		== old(getMatrixRowMajor())[i]*scaleFactor)
+	 */
+	public void scale(double scaleFactor) {
+		for (int i=0; i<elements.length; i++)
+			elements[i]*= scaleFactor;
+	}
 	
 	/**
+	 * @inspects | this, matrix2
+	 * @creates | result
 	 * @throws | getRows() != matrix2.getRows() || getColumns() != matrix2.getColumns()
 	 * @post | IntStream.range(0,getMatrixRowMajor().length).allMatch(i-> 
 	 * 		| result.getMatrixRowMajor()[i] == getMatrixRowMajor()[i] + matrix2.getMatrixRowMajor()[i])
@@ -128,5 +161,19 @@ public class Matrix {
 		return new Matrix(newElements, rows, columns);
 		
 	}
+	/**
+	 * 
+	 * @mutates | this
+	 * @inspects | other
+	 * 
+	 * @post | IntStream.range(0, getRows()*getColumns()).allMatch(i->
+	 * 		 |		getMatrixRowMajor()[i] == old(getMatrixRowMajor())[i] + other.getMatrixRowMajor()[i])
+	 */
+	public void add(Matrix other) {
+		for(int i=0; i< elements.length;i++)
+			elements[i] += other.elements[i];
+	}
+	
+	
 	
 }
