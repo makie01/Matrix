@@ -14,10 +14,7 @@ import java.util.stream.IntStream;
  */
 
 public class Matrix {
-	/**
-	 * @invar | rows > 0
-	 */
-	private int rows;
+
 	/**
 	 * @invar | columns > 0
 	 */
@@ -25,10 +22,13 @@ public class Matrix {
 	
 	/**
 	 * @representationObject
+	 * @representationObjects
+	 * Deze tag betekent dat de elementen van het representationobject ook representationobjects
+	 * zijn. Hier van toepassaing aangezien we het opslagen als een lijst van lijsten
 	 * @invar | elements != null
-	 * @invar | elements.length == rows*columns
+	 * @invar | Arrays.stream(elements).allMatch(row-> row != null && row.length == columns)
 	 */
-	private double[] elements;
+	private double[][] elements;
 
 	/**
 	 * @basic
@@ -38,7 +38,7 @@ public class Matrix {
 	 */
 	
 	public int getRows() {
-		return rows;
+		return elements.length;
 	}
 	/**
 	 * @immutable
@@ -57,14 +57,20 @@ public class Matrix {
 		if(row <= 0 || row > getRows() || column <=0 || column > getColumns())
 			throw new IllegalArgumentException("Unvalid row or column");
 		
-		return elements[row*getColumns() + column];
+		return elements[row][column];
 	}
 	/**
 	 *@post | result.length == getRows()*getColumns()
 	 *@creates | result
 	 */
 	public double[] getMatrixRowMajor() {
-		return elements.clone();
+		double[] result = new double[getRows()*getColumns()];
+		for(int column = 0; column < getColumns(); column++) {
+			for ( int row = 0; row < getRows(); row++) {
+				result[row*columns + column] = elements[row][column];
+			}
+		}
+		return result;
 	}
 	/**
 	 * @creates| result
@@ -72,10 +78,10 @@ public class Matrix {
 	 */
 	
 	public double[] getMatrixColumnMajor() {
-		double[] result = new double[elements.length];
+		double[] result = new double[getRows()*getColumns()];
 		for(int column = 0; column < getColumns(); column++) {
 			for ( int row = 0; row < getRows(); row++) {
-				result[column*getRows() + row ] = elements[row*getColumns() + column];
+				result[column*getRows() + row ] = elements[row][column];
 			}
 		}
 		return result;
@@ -83,15 +89,32 @@ public class Matrix {
 	/**
 	 * @basic
 	 * @creates | result
+	 * BELANGRIJKE OPMERKING:
+	 * hier mag je voor de implemantie niet gwn schrijven:
+	 * return elements.copy
+	 * Waarom? Dit neemt een "shallow copy". De klant krijgt weliswaar array die een copy is
+	 * van elements (die dus niet dezelfde is als de elements in de representatie), maar
+	 * deze copy is 'shallow'. De lijsten die elementen zijn van de array elements zitten wel
+	 * nog in deze copy. De klant heeft dus een referentie van deze lijsten en wanneer hij deze
+	 * verandert veranderen ook de lijsten in de interne representatie van de matrix.
 	 */
 	public double[][] getMatrix(){
-		double[][] result = new double[getRows()][getColumns()];
-		for(int row = 0;row<getRows();row++) {
-			for(int column = 0; column<getColumns(); column++) {
-				result[row][column] = elements[row*getColumns() + column];
+		double[][] result = new double[elements.length][columns];
+		for(int column = 0; column < columns; column++) {
+			for ( int row = 0; row < elements.length; row++) {
+				result[row][column] = elements[row][column];
 			}
 		}
 		return result;
+		// alternatieve implementatie 1:
+		// return Arrays.stream(elements).map(row->row.clone()).toArray(n -> new double[n][])
+		// toArray(...), deze ... zegt hoe de array aangemaakt moet worden voor n elementen.
+		
+		// alternatieve implementatie 2:
+		// double[][] result = result.clone();
+		// for (int i = 0; i<result.length; i++)
+		// 		result[i] = result[i].clone();
+		// return result
 		
 	}
 	/**
@@ -108,9 +131,13 @@ public class Matrix {
 		if(elements.length != rows*columns)
 			throw new IllegalArgumentException("Impossible dimensions of matrix");
 		
-		this.rows = rows;
 		this.columns = columns;
-		this.elements = elements.clone();
+		this.elements = new double[rows][columns];
+		for(int column = 0; column < columns; column++) {
+			for ( int row = 0; row < rows; row++) {
+				this.elements[row][column] = elements[row*columns + column];
+			}
+		}
 	}
 	/**
 	 * Returns a scaled copy
@@ -123,11 +150,12 @@ public class Matrix {
 	 */
 	
 	public Matrix scaled(double scalor) {
-		double[] newElements = new double[elements.length];
-		for(int i=0; i< elements.length;i++) {
-			newElements[i] = elements[i]*scalor;
+		double[] elementsRowMajor = getMatrixRowMajor();
+		double[] newElements = new double[elementsRowMajor.length];
+		for(int i=0; i< newElements.length;i++) {
+			newElements[i] = elementsRowMajor[i]*scalor;
 		}
-		return new Matrix(newElements, rows, columns);
+		return new Matrix(newElements,getRows(), columns);
 	}
 	/**
 	 * Scales the elements of the given matrix (no copy)
@@ -136,8 +164,11 @@ public class Matrix {
 	 * 		 |		== old(getMatrixRowMajor())[i]*scaleFactor)
 	 */
 	public void scale(double scaleFactor) {
-		for (int i=0; i<elements.length; i++)
-			elements[i]*= scaleFactor;
+		for(int column = 0; column < columns; column++) {
+			for ( int row = 0; row < elements.length; row++) {
+				this.elements[row][column] *= scaleFactor;
+			}
+		}
 	}
 	
 	/**
@@ -149,16 +180,17 @@ public class Matrix {
 	 */
 	
 	public Matrix plus(Matrix matrix2) {
-		if (rows != matrix2.getRows() || columns != matrix2.getColumns())
+		if (elements.length != matrix2.getRows() || columns != matrix2.getColumns())
 			throw new IllegalArgumentException("Dimensions of matrices don't match.");
 		
-		
-		double[] newElements = new double[elements.length];
-		for(int i=0; i< elements.length;i++) {
-			newElements[i] = elements[i] + matrix2.getMatrixRowMajor()[i];
+		double[] elementsRowMajor = getMatrixRowMajor();
+		double[] elementsRowMajor2 = matrix2.getMatrixRowMajor();
+		double[] newElements = new double[elementsRowMajor.length];
+		for(int i=0; i< newElements.length;i++) {
+			newElements[i] = elementsRowMajor[i] + elementsRowMajor2[i];
 		}
 		
-		return new Matrix(newElements, rows, columns);
+		return new Matrix(newElements, elements.length, columns);
 		
 	}
 	/**
@@ -170,10 +202,12 @@ public class Matrix {
 	 * 		 |		getMatrixRowMajor()[i] == old(getMatrixRowMajor())[i] + other.getMatrixRowMajor()[i])
 	 */
 	public void add(Matrix other) {
-		for(int i=0; i< elements.length;i++)
-			elements[i] += other.elements[i];
+		for(int column = 0; column < columns; column++) {
+			for ( int row = 0; row < elements.length; row++) {
+				this.elements[row][column] += other.getElementAt(row, column);
+			}
+		}
 	}
-	
 	
 	
 }
